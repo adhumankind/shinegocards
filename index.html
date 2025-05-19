@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class=""> <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拾光卡片</title>
+    <link href="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/tailwindcss/2.2.19/tailwind.min.css" rel="stylesheet">
+    <link href="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-100-M/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans SC', Tahoma, Arial, Roboto, "Droid Sans", "Helvetica Neue", "Droid Sans Fallback", "Heiti SC", "Hiragino Sans GB", Simsun, sans-serif;
+            background-color: #f8f9fa; 
+            color: #1f2937; 
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .dark body {
+            background-color: #111827; 
+            color: #d1d5db; 
+        }
+        .dark .card-front {
+            background-color: #1f2937; 
+            color: #d1d5db; 
+            border-color: #374151; 
+        }
+        .dark .card-container:hover .card:not(.is-flipped) .card-front {
+            background-color: #374151; 
+            border-color: #52525b; 
+        }
+        .dark .card-back {
+            background-color: #3b82f6; 
+            color: white;
+        }
+        .dark .modal-content {
+            background-color: #1f2937; 
+            border-color: #374151; 
+        }
+        .dark .modal-content label, .dark .modal-content h2, .dark .modal-content p, .dark .modal-content th, .dark .modal-content td, .dark .modal-content li {
+            color: #d1d5db; 
+        }
+        .dark .modal-content input {
+            background-color: #374151; 
+            color: #f3f4f6; 
+            border-color: #4b5563; 
+        }
+        .dark .close-button { color: #9ca3af; }
+        .dark .close-button:hover { color: #f3f4f6; }
+
+        .dark #topicInput {
+            background-color: #374151;
+            border-color: #4b5563;
+            color: #f3f4f6;
+        }
+        .dark #topicInput::placeholder {
+            color: #9ca3af;
+        }
+        .dark .status-line-text { 
+            color: #9ca3af; 
+        }
+         .dark .app-header .subtitle {
+            color: #9ca3af; 
+        }
+        .dark .settings-btn-fab { 
+            color: #9ca3af;
+        }
+        .dark .settings-btn-fab:hover {
+            color: #60a5fa; 
+        }
+        .dark .pulsing-dots span {
+            background-color: #6b7280;
+        }
+        .dark #loadingStatusText {
+            color: #9ca3af;
+        }
+        .dark section.bg-white { 
+            background-color: #1f2937; 
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
+        }
+        .dark .favorites-table th {
+            background-color: #374151; 
+        }
+        .dark .favorites-table tr:nth-child(even) {
+            background-color: #2c3646; 
+        }
+        .dark .favorites-table tr:hover {
+            background-color: #4b5563;
+        }
+         .dark .action-btn:hover {
+            color: #ef4444; 
+        }
+        .dark .info-panel-content ul { list-style-type: decimal; margin-left: 1.5rem;}
+        .dark .info-panel-content strong { color: #e5e7eb; }
+
+
+        .card-container {
+            perspective: 1000px;
+            position: relative; 
+        }
+        .newly-added-card {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+        }
+        .newly-added-card.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .card {
+            width: 100%;
+            height: 180px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.7s ease-in-out, box-shadow 0.3s ease-in-out;
+            cursor: pointer;
+            border-radius: 0.5rem;
+        }
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 1rem;
+            padding-top: 1rem; 
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: background-color 0.3s, border 0.3s, box-shadow 0.3s;
+            font-family: 'SimSun', '宋体', serif; 
+        }
+        .card-front {
+            background-color: white;
+            color: #333;
+            border: 2px solid transparent;
+        }
+        .card-front h3 {
+            font-size: 1.6rem; 
+            font-weight: 600;
+            line-height: 1.4;
+        }
+        .card-back {
+            background-color: #60a5fa; 
+            color: white;
+            transform: rotateY(180deg);
+            border: 2px solid transparent;
+        }
+        .card-back p {
+            font-size: 1.1rem; 
+            line-height: 1.6;
+        }
+        .card.is-flipped {
+            transform: rotateY(180deg);
+        }
+        .card-container:hover .card:not(.is-flipped) {
+            transform: scale(1.05) translateY(-2px); 
+            box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.15), 0 5px 10px -3px rgba(0, 0, 0, 0.1);
+        }
+         .card-container:hover .card:not(.is-flipped) .card-front {
+            border: 2px solid #3b82f6; 
+            background-color: #f9fafb; 
+        }
+        .favorite-star {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 28px;
+            height: 28px;
+            cursor: pointer;
+            z-index: 10; 
+            transition: transform 0.2s ease-in-out; 
+        }
+        .favorite-star:hover {
+            transform: scale(1.15);
+        }
+        .favorite-star svg { width: 100%; height: 100%; }
+        .favorite-star .star-path {
+            fill: none;
+            stroke: #9ca3af; 
+            stroke-width: 1.5;
+            transition: fill 0.2s ease-in-out, stroke 0.2s ease-in-out;
+        }
+        .dark .favorite-star .star-path {
+            stroke: #6b7280; 
+        }
+        .favorite-star.is-favorite .star-path {
+            fill: #fcd34d; 
+            stroke: #f59e0b; 
+        }
+        .dark .favorite-star.is-favorite .star-path {
+            fill: #facc15; 
+            stroke: #d97706; 
+        }
+        .star-pop {
+            animation: pop 0.3s ease-out;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.4); } 
+            100% { transform: scale(1); } 
+        }
+        .modal { display: none; position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; overflow-y: auto; background-color: rgba(0,0,0,0.6); transition: opacity 0.3s ease-out; }
+        .modal-content { background-color: #ffffff; margin: 5% auto; padding: 24px; border: 1px solid #e5e7eb; width: 90%; max-width: 400px; border-radius: 0.75rem; transform: scale(1); opacity: 1; transition: transform 0.3s ease-out, opacity 0.3s ease-out; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 20px 40px -10px rgba(0,0,0,0.2); }
+        .modal.favorites-panel .modal-content, .modal.info-panel .modal-content { 
+             max-width: 800px; 
+        }
+        .modal.closing .modal-content { transform: scale(0.8); opacity: 0; }
+        .close-button { color: #9ca3af; float: right; font-size: 28px; font-weight: bold; }
+        .close-button:hover, .close-button:focus { color: #1f2937; text-decoration: none; cursor: pointer; }
+        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 1000; width: auto; max-width: 350px; }
+        .toast { padding: 12px 18px; border-radius: 8px; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); opacity: 0; transform: translateX(100%); transition: opacity 0.4s ease, transform 0.4s ease; display: flex; align-items: center; font-size: 0.9rem; position: relative; }
+        .dark .toast {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .toast.show { opacity: 1; transform: translateX(0); }
+        .toast-icon { margin-right: 12px; font-size: 1.3em; line-height: 1; }
+        .toast.success { background-color: #dcfce7; color: #166534; border-left: 4px solid #22c55e; } 
+        .dark .toast.success { background-color: #1f2937; color: #6ee7b7; border-left-color: #34d399; }
+        .toast.error { background-color: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; } 
+        .dark .toast.error { background-color: #1f2937; color: #fca5a5; border-left-color: #f87171; }
+        .toast.warning { background-color: #fef3c7; color: #92400e; border-left: 4px solid #f59e0b; } 
+        .dark .toast.warning { background-color: #1f2937; color: #fcd34d; border-left-color: #fbbf24; }
+        .toast.info { background-color: #dbeafe; color: #1e40af; border-left: 4px solid #3b82f6; } 
+        .dark .toast.info { background-color: #1f2937; color: #93c5fd; border-left-color: #60a5fa; }
+        .toast .toast-icon { color: inherit; }
+        .toast-close-btn { position: absolute; top: 4px; right: 4px; background: none; border: none; color: inherit; opacity: 0.7; cursor: pointer; padding: 4px; line-height: 1; }
+        .toast-close-btn:hover { opacity: 1; }
+        .toast-close-btn svg { width: 1em; height: 1em; }
+        
+        .app-header {
+            padding-top: 4rem; 
+            padding-bottom: 3rem; 
+            text-align: center;
+        }
+        .app-header .title-wrapper { 
+            display: flex;
+            justify-content: center; 
+            align-items: center; 
+        }
+        .app-header .main-title {
+            font-size: 3rem; 
+            font-weight: 700; 
+            color: #2563eb; 
+            line-height: 1.2;
+        }
+        .app-header .subtitle {
+            font-size: 1rem; 
+            color: #6b7280; 
+            font-weight: 400; 
+            margin-top: 0.5rem; 
+        }
+        .dark .app-header .subtitle {
+            color: #9ca3af; 
+        }
+
+        .status-section {
+            text-align: center;
+            margin-bottom: 2rem; 
+            padding: 0 1rem; 
+        }
+        .status-line-text { 
+            font-size: 0.95rem; 
+            color: #4b5563; 
+            line-height: 1.6;
+        }
+        .dark .status-line-text {
+            color: #9ca3af;
+        }
+
+        .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pulsing-dots span { display: inline-block; width: 10px; height: 10px; margin: 0 3px; background-color: #9ca3af; border-radius: 50%; animation: pulse 1.4s infinite ease-in-out both; }
+        .pulsing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .pulsing-dots span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes pulse { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
+        
+        #continueGenerateButtonContainer {
+            text-align: center;
+            margin-top: 2rem;
+            max-width: 32rem; 
+            margin-left: auto;
+            margin-right: auto;
+        }
+        #continueGenerateButton {
+            width: 100%;
+        }
+
+        .action-button-group { 
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column; 
+            gap: 0.75rem; 
+            z-index: 1001;
+        }
+        .fab-button { 
+            background-color: #fff;
+            color: #333;
+            border: 1px solid #ddd;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease;
+        }
+        .fab-button:hover {
+            transform: scale(1.1);
+        }
+        .dark .fab-button {
+            background-color: #374151; 
+            color: #f3f4f6; 
+            border-color: #4b5563; 
+        }
+        .fab-button i {
+            font-size: 1.25rem; 
+        }
+        .favorites-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        .favorites-table th, .favorites-table td {
+            border: 1px solid #e5e7eb; 
+            padding: 0.75rem;
+            text-align: left;
+            font-size: 0.875rem; 
+        }
+        .dark .favorites-table th, .dark .favorites-table td {
+            border-color: #4b5563; 
+        }
+        .favorites-table th {
+            background-color: #f9fafb; 
+            font-weight: 600;
+        }
+        .favorites-table tr:nth-child(even) {
+            background-color: #f9fafb;
+        }
+        .favorites-table tr:hover {
+            background-color: #f3f4f6; 
+        }
+        .favorites-table .action-btn {
+            background: none;
+            border: none;
+            color: #ef4444; 
+            cursor: pointer;
+            padding: 0.25rem;
+        }
+        .favorites-table .action-btn:hover {
+            color: #dc2626; 
+        }
+        .favorites-table .action-btn i {
+            font-size: 1rem;
+        }
+        .info-panel-content h3 {
+            font-size: 1.25rem; 
+            font-weight: 600;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+        .info-panel-content ul {
+            list-style-type: decimal;
+            margin-left: 1.5rem; 
+            margin-bottom: 1rem;
+        }
+        .info-panel-content li {
+            margin-bottom: 0.25rem;
+        }
+        .info-panel-content p {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+        }
+
+    </style>
+</head>
+<body class="transition-colors duration-300">
+
+    <div id="toast-container"></div>
+
+    <div id="wenXiaoBaiAuthModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeWenXiaoBaiAuthModal()">&times;</span>
+            <div id="wxb-login-form-view">
+                <h2 class="text-xl font-semibold mb-3 text-center">账号登录</h2>
+                <div class="mb-4 w-full">
+                    <label for="phone" class="block text-sm font-bold mb-2">手机号码:</label>
+                    <input type="text" id="phone" class="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline" placeholder="请输入手机号码">
+                </div>
+                <div class="mb-4 flex w-full items-end">
+                    <div class="flex-grow mr-2">
+                        <label for="code" class="block text-sm font-bold mb-2">验证码:</label>
+                        <input type="text" id="code" class="shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline" placeholder="请输入验证码">
+                    </div>
+                    <button id="send-code-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline h-10">发送验证码</button>
+                </div>
+                 <button id="login-btn" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">登录</button>
+                <p id="login-status" class="text-sm text-center mt-2"></p>
+            </div>
+            <div id="wxb-loggedin-view" class="hidden">
+                 <h2 class="text-xl font-semibold mb-3 text-center">已登录</h2>
+                <p class="mb-2 text-center">当前登录账户:</p>
+                <p id="loggedInUserPhone" class="text-center font-semibold text-blue-600 mb-4"></p>
+                 <button id="logout-btn" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full">退出登录</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="favoritesPanelModal" class="modal favorites-panel">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-semibold">我的收藏</h2>
+                <span class="close-button" onclick="closeFavoritesPanelModal()">&times;</span>
+            </div>
+            <div id="favoritesTableContainer" class="overflow-x-auto">
+                {/* Table will be rendered here by JavaScript */}
+            </div>
+            <p id="noFavoritesMessage" class="text-center py-4 hidden">您的收藏夹是空的，快去收藏喜欢的卡片吧！</p>
+        </div>
+    </div>
+
+    <div id="infoPanelModal" class="modal info-panel">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-semibold">使用说明与信息</h2>
+                <span class="close-button" onclick="closeInfoPanelModal()">&times;</span>
+            </div>
+            <div class="info-panel-content text-sm">
+                <h3>使用说明</h3>
+                <ul class="space-y-1">
+                    <li>在顶部的输入框中输入您感兴趣的任何主题（例如“宇宙的奥秘”、“古典音乐家”）。</li>
+                    <li>点击“生成卡片”按钮或按回车键，AI将为您生成相关的知识卡片。</li>
+                    <li>点击卡片可以翻转查看背面解读，同时会朗读卡片内容（若浏览器支持）。</li>
+                    <li>点击卡片左上角的 <i class="fas fa-star text-yellow-400"></i> 图标，可以将该卡片收藏或取消收藏。</li>
+                    <li>卡片生成后，可点击页面下方的“继续生成”按钮加载更多卡片。</li>
+                    <li>通过右下角的 <i class="fas fa-bookmark"></i> 图标可查看和管理您的收藏。</li>
+                    <li>通过右下角的 <i class="fas fa-moon"></i> / <i class="fas fa-sun"></i> 图标可切换浅色/深色模式。</li>
+                    <li>通过右下角的 <i class="fas fa-cog"></i> 图标可进行账号登录与管理。</li>
+                </ul>
+
+                <h3 class="mt-6">版权与鸣谢</h3>
+                <p><strong>作者：</strong>阿帝</p>
+                <p><strong>AI服务：</strong>本应用核心AI能力由 问小白平台 提供。</p>
+                
+                <h3 class="mt-6">免责声明</h3>
+                <p>本工具生成的卡片内容由AI模型根据用户输入的主题自动生成，可能包含不准确或不完整的信息。内容仅供学习、参考和娱乐目的，不构成任何专业建议。开发者不对因使用本工具生成的任何信息而导致的任何直接或间接损失负责。请用户自行判断信息的准确性和适用性。</p>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="container mx-auto px-4 py-8">
+        <header class="app-header">
+            <div class="title-wrapper">
+                <h1 class="main-title">拾光卡片</h1>
+            </div>
+            <p class="subtitle">记录 与 探索</p>
+        </header>
+
+        <section class="mb-10 max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-lg dark:bg-gray-800 dark:shadow-2xl">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <input type="text" id="topicInput" class="flex-grow p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-transparent outline-none dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-400" placeholder="输入任意主题，例如：宇宙的奥秘">
+                <button id="generateButton" class="text-white px-6 py-3 rounded-md transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-opacity-50 transform active:scale-95 ease-in-out bg-blue-500 hover:bg-blue-600 focus:ring-blue-500">
+                    生成卡片
+                </button>
+            </div>
+        </section>
+
+        <section class="status-section">
+            <p id="statusLine" class="status-line-text">输入一个您感兴趣的主题，AI将为您生成相关的知识卡片，助您轻松学习与探索。</p>
+            </section>
+
+        <main id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6"> </main>
+        
+        <div id="continueGenerateButtonContainer" class="hidden">
+            <button id="continueGenerateButton" class="mt-8 mx-auto bg-green-500 text-white px-6 py-3 rounded-md hover:bg-green-600 transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 transform active:scale-95 duration-75 ease-in-out">
+                继续生成
+            </button>
+        </div>
+
+        <div id="loadingIndicator" class="text-center py-8 hidden">
+            <div class="loader-container">
+                <p id="loadingStatusText" class="text-gray-500 mt-3 dark:text-gray-400">卡片生成中</p> 
+                <div class="pulsing-dots mt-1">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        </div>
+        <div id="errorNotification" class="text-center py-4 text-red-600 hidden"></div>
+    </div>
+
+    <div class="action-button-group">
+        <button id="favorites-toggle-button" title="我的收藏" class="fab-button">
+            <i class="fas fa-bookmark"></i>
+        </button>
+        <button id="theme-toggle-button" title="切换深色/浅色模式" class="fab-button">
+            <i class="fas fa-moon"></i> 
+        </button>
+        <button id="authSettingsButton" title="账号设置" class="fab-button"> 
+            <i class="fas fa-cog"></i>
+        </button>
+        <button id="infoButton" title="使用说明与信息" class="fab-button">
+            <i class="fas fa-info-circle"></i>
+        </button>
+    </div>
+
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/mermaid/8.14.0/mermaid.min.js"></script>
+    <script>
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+    </script>
+
+    <script>
+        // --- DOM Elements ---
+        const cardGrid = document.getElementById('cardGrid');
+        const topicInput = document.getElementById('topicInput');
+        const generateButton = document.getElementById('generateButton');
+        const statusLine = document.getElementById('statusLine');
+        // const flippedStatusLine = document.getElementById('flippedStatusLine'); // No longer used directly for display
+        const wenXiaoBaiAuthModal = document.getElementById('wenXiaoBaiAuthModal');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const loadingStatusText = document.getElementById('loadingStatusText'); 
+        const toastContainer = document.getElementById('toast-container');
+        const phoneInput = document.getElementById('phone');
+        const codeInput = document.getElementById('code');
+        const sendCodeBtn = document.getElementById('send-code-btn');
+        const loginBtn = document.getElementById('login-btn');
+        const loginStatus = document.getElementById('login-status');
+        const loggedInUserPhoneElement = document.getElementById('loggedInUserPhone');
+        const logoutBtn = document.getElementById('logout-btn');
+        const loginFormView = document.getElementById('wxb-login-form-view');
+        const loggedInView = document.getElementById('wxb-loggedin-view');
+        const authSettingsButton = document.getElementById('authSettingsButton'); 
+        const continueGenerateButtonContainer = document.getElementById('continueGenerateButtonContainer');
+        const continueGenerateButton = document.getElementById('continueGenerateButton');
+        const themeToggleButton = document.getElementById('theme-toggle-button');
+        const themeToggleIcon = themeToggleButton.querySelector('i');
+        const favoritesPanelModal = document.getElementById('favoritesPanelModal');
+        const favoritesTableContainer = document.getElementById('favoritesTableContainer');
+        const noFavoritesMessage = document.getElementById('noFavoritesMessage');
+        const favoritesToggleButton = document.getElementById('favorites-toggle-button');
+        const infoButton = document.getElementById('infoButton');
+        const infoPanelModal = document.getElementById('infoPanelModal');
+
+
+        // --- App State & Config ---
+        let currentTopic = "";
+        let cardsGeneratedCount = 0;
+        let flippedCardsCount = 0;
+        let countedAsFlippedSet = new Set(); 
+        let isLoading = false;
+        let existingCardFronts = [];
+        let usedRealAI = false;
+        let voices = [];
+        let currentSpeechRate = 1.0;
+        let noMoreContentFromAPI = false;
+        let favoriteCards = JSON.parse(localStorage.getItem('favoriteFlashcards')) || [];
+        let loadingMessageTimeoutIds = []; 
+
+        const exampleTopics = [
+            "人工智能的历史", "深海生物的奥秘", "文艺复兴时期的艺术", "量子物理入门", 
+            "中国古典诗词鉴赏", "世界著名建筑", "爵士音乐流派", "古代神话故事", 
+            "未来能源技术", "健康饮食指南", "宇宙大爆炸理论", "古埃及文明", 
+            "莎士比亚戏剧", "神经科学基础", "全球气候变化"
+        ];
+
+        const WXB_BASE_URL = 'https://api-bj.wenxiaobai.com';
+        const WXB_SECRET_KEY = 'TkoWuEN8cpDJubb7Zfwxln16NQDZIc8z';
+        const WXB_APP_ID = 20001987;
+        const WXB_BOT_ID_CHAT = "200006";
+        const WXB_BOT_ID_DEEP_THINK = 200004;
+        const WXB_CONVERSATION_COOLDOWN = 180 * 1000;
+        let wxbAppState = loadWenXiaoBaiState();
+
+        const starSVG = `
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path class="star-path" d="M12 .587l3.668 7.568 8.332 1.151-6.064 5.828 1.48 8.279L12 19.432l-7.416 3.981L6.064 15.134 0 9.306l8.332-1.151L12 .587z"/>
+            </svg>
+        `;
+
+        // --- Theme Management ---
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+                themeToggleIcon.classList.remove('fa-moon');
+                themeToggleIcon.classList.add('fa-sun');
+                 mermaid.initialize({ startOnLoad:false, theme: 'dark' });
+            } else {
+                document.documentElement.classList.remove('dark');
+                themeToggleIcon.classList.remove('fa-sun');
+                themeToggleIcon.classList.add('fa-moon');
+                mermaid.initialize({ startOnLoad:false, theme: 'default' });
+            }
+            document.querySelectorAll('.mermaid').forEach(el => {
+                const svg = el.querySelector('svg');
+                if (svg) svg.remove();
+                mermaid.run({ nodes: [el] });
+            });
+        }
+
+        function toggleTheme() {
+            const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('theme', newTheme);
+            applyTheme(newTheme);
+        }
+        const storedTheme = localStorage.getItem('theme');
+        const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        applyTheme(storedTheme || preferredTheme);
+        themeToggleButton.addEventListener('click', toggleTheme);
+
+
+        // --- WenXiaoBai State Management ---
+        function saveWenXiaoBaiState(state) { localStorage.setItem('wenxbState', JSON.stringify(state)); }
+        function loadWenXiaoBaiState() { const state = localStorage.getItem('wenxbState'); return state ? JSON.parse(state) : {};}
+        function clearWenXiaoBaiState() { localStorage.removeItem('wenxbState'); wxbAppState = {}; }
+
+        // --- WenXiaoBai Utility Functions (Signatures, Dates, IDs, Headers) ---
+        async function generateDigest(content = '') { if (!content) { return 'SHA-256=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU='; } const encoder = new TextEncoder(); const data = encoder.encode(content); const hashBuffer = await crypto.subtle.digest('SHA-256', data); const base64Hash = btoa(String.fromCharCode(...new Uint8Array(hashBuffer))); return `SHA-256=${base64Hash}`; }
+        async function generateSignature(dateStr, digestStr) { const stringToSign = `x-date: ${dateStr}\ndigest: ${digestStr}`; const encoder = new TextEncoder(); const keyData = encoder.encode(WXB_SECRET_KEY); const messageData = encoder.encode(stringToSign); const key = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']); const signatureBuffer = await crypto.subtle.sign('HMAC', key, messageData); return btoa(String.fromCharCode(...new Uint8Array(signatureBuffer))); }
+        function getFormattedDate() { return new Date().toUTCString(); }
+        function generateDeviceId() { if(wxbAppState.device_id) return wxbAppState.device_id; const timestamp = Date.now(); const randomPart = Math.random().toString(36).substring(2, 8); const newId = `web_${timestamp}_${randomPart}`; wxbAppState.device_id = newId; saveWenXiaoBaiState(wxbAppState); console.log("Generated Device ID:", newId); return newId;}
+        async function getWebId() { if (wxbAppState.web_id) return wxbAppState.web_id; try { const payload = { "app_id": WXB_APP_ID, "url": "https://www.wenxiaobai.com/chat/tourist", "user_agent": navigator.userAgent, "referer": "", "user_unique_id": wxbAppState.user_id || "" }; const response = await fetch('https://gator.volces.com/webid', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'Origin': 'https://www.wenxiaobai.com', 'Referer': 'https://www.wenxiaobai.com/', }, body: JSON.stringify(payload) }); if (response.ok) { const data = await response.json(); if (data.web_id) { wxbAppState.web_id = data.web_id; saveWenXiaoBaiState(wxbAppState); console.log("Web ID obtained:", wxbAppState.web_id); return wxbAppState.web_id; } } console.warn("Failed to get Web ID from API, using placeholder."); } catch (error) { console.error("Error fetching Web ID:", error); } if (!wxbAppState.web_id) { wxbAppState.web_id = `web_${Date.now()}_fallback_advanced`; saveWenXiaoBaiState(wxbAppState); console.log("Using fallback Web ID:", wxbAppState.web_id); } return wxbAppState.web_id; }
+        async function getWenXiaoBaiHeaders(content = '', isChat = false) { const dateStr = getFormattedDate(); const digestStr = await generateDigest(content); const signature = await generateSignature(dateStr, digestStr); const headers = { 'accept': isChat ? 'text/event-stream, text/event-stream' : 'application/json, text/plain, */*', 'accept-language': 'zh-CN,zh;q=0.9', 'cache-control': 'no-cache', 'content-type': 'application/json; charset=utf-8', 'origin': 'https://www.wenxiaobai.com', 'pragma': 'no-cache', 'referer': 'https://www.wenxiaobai.com/', 'sec-ch-ua': '"Not/A)Brand";v="8", "Chromium";v="126", "Google Chrome";v="126"', 'sec-ch-ua-mobile': '?0', 'sec-ch-ua-platform': '"Windows"', 'sec-fetch-dest': 'empty', 'sec-fetch-mode': 'cors', 'sec-fetch-site': 'same-site', 'user-agent': navigator.userAgent, 'x-date': dateStr, 'digest': digestStr, 'x-yuanshi-appname': 'wenxiaobai', 'x-yuanshi-appversioncode': isChat ? '3.1.0' : '2.1.5', 'x-yuanshi-appversionname': isChat ? '3.1.0' : '2.8.0', 'x-yuanshi-channel': 'browser', 'x-yuanshi-devicemode': 'Chrome', 'x-yuanshi-deviceos': '10', 'x-yuanshi-locale': 'zh', 'x-yuanshi-platform': 'web', 'x-yuanshi-timezone': 'Asia/Shanghai', 'authorization': `hmac username="web.1.0.beta", algorithm="hmac-sha1", headers="x-date digest", signature="${signature}"` }; if (wxbAppState.token) { headers['x-yuanshi-authorization'] = `Bearer ${wxbAppState.token}`; } if (wxbAppState.device_id) { headers['x-yuanshi-deviceid'] = wxbAppState.device_id; } return headers; }
+
+        // --- Utility and Core Logic Functions ---
+        function showToast(message, type = 'info', duration = 3500) {
+            if (!toastContainer) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let iconHtml = '';
+            if (type === 'success') iconHtml = '<span class="toast-icon">✓</span>';
+            else if (type === 'error') iconHtml = '<span class="toast-icon">✕</span>';
+            else if (type === 'warning') iconHtml = '<span class="toast-icon">⚠️</span>';
+            else if (type === 'info') iconHtml = '<span class="toast-icon">ℹ️</span>';
+            const messageDiv = document.createElement('div');
+            messageDiv.innerHTML = `${iconHtml}<div>${message}</div>`; 
+            messageDiv.classList.add('flex', 'items-center', 'flex-grow'); 
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'toast-close-btn';
+            closeBtn.innerHTML = '<svg fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>';
+            closeBtn.setAttribute('aria-label', '关闭通知'); 
+            toast.appendChild(messageDiv);
+            toast.appendChild(closeBtn);
+            const removeToast = () => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400); 
+            };
+            closeBtn.onclick = removeToast; 
+            toastContainer.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 10);
+            setTimeout(removeToast, duration); 
+        }
+
+        function loadVoices() {
+            if (typeof speechSynthesis === 'undefined') return;
+            voices = speechSynthesis.getVoices();
+            if (voices.length === 0) {
+                speechSynthesis.onvoiceschanged = () => {
+                    voices = speechSynthesis.getVoices();
+                };
+            }
+        }
+
+        function speakCardContent(frontText, backText) {
+            if (typeof speechSynthesis === 'undefined' || !speechSynthesis) {
+                showToast('您的浏览器不支持语音朗读功能。', 'warning');
+                return;
+            }
+            speechSynthesis.cancel();
+            const utteranceFront = new SpeechSynthesisUtterance(frontText);
+            const utteranceBack = new SpeechSynthesisUtterance(backText);
+            const chineseVoice = voices.find(voice => voice.lang.startsWith('zh-CN'));
+            if (chineseVoice) {
+                utteranceFront.voice = chineseVoice;
+                utteranceBack.voice = chineseVoice;
+            }
+            utteranceFront.rate = currentSpeechRate;
+            utteranceBack.rate = currentSpeechRate;
+            speechSynthesis.speak(utteranceFront);
+            speechSynthesis.speak(utteranceBack);
+        }
+
+        function createCardElement(cardData) {
+            const cardContainer = document.createElement('div');
+            cardContainer.className = 'card-container group newly-added-card';
+
+            const favoriteStar = document.createElement('div');
+            favoriteStar.className = 'favorite-star';
+            favoriteStar.innerHTML = starSVG;
+            
+            const cardIdentifierForFav = cardData.front + '::' + cardData.back; 
+            if (favoriteCards.some(fav => fav.front === cardData.front && fav.back === cardData.back)) {
+                favoriteStar.classList.add('is-favorite');
+            }
+
+            favoriteStar.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                const isCurrentlyFavorite = favoriteStar.classList.toggle('is-favorite');
+                favoriteStar.classList.add('star-pop');
+                setTimeout(() => favoriteStar.classList.remove('star-pop'), 300); 
+                
+                if (isCurrentlyFavorite) { 
+                    if (!favoriteCards.some(fav => fav.front === cardData.front && fav.back === cardData.back)) {
+                        favoriteCards.push({ front: cardData.front, back: cardData.back });
+                    }
+                    showToast('已收藏！', 'success', 1500);
+                } else { 
+                    favoriteCards = favoriteCards.filter(fav => !(fav.front === cardData.front && fav.back === cardData.back));
+                    showToast('已取消收藏', 'info', 1500);
+                }
+                localStorage.setItem('favoriteFlashcards', JSON.stringify(favoriteCards));
+                renderFavoritesPanel(); 
+            });
+            cardContainer.appendChild(favoriteStar); 
+
+            const card = document.createElement('div');
+            card.className = 'card';
+            const cardIdentifier = cardData.front + '::' + cardData.back;
+            card.dataset.identifier = cardIdentifier;
+
+
+            const cardFront = document.createElement('div');
+            cardFront.className = 'card-face card-front';
+            cardFront.innerHTML = `<h3>${cardData.front}</h3>`;
+
+            const cardBack = document.createElement('div');
+            cardBack.className = 'card-face card-back';
+            cardBack.innerHTML = `<p>${cardData.back}</p>`;
+
+            card.appendChild(cardFront);
+            card.appendChild(cardBack);
+            cardContainer.appendChild(card); 
+
+            card.addEventListener('click', () => {
+                const wasFlippedToBack = card.classList.contains('is-flipped');
+                card.classList.toggle('is-flipped');
+                
+                if (!wasFlippedToBack && card.classList.contains('is-flipped')) {
+                    if (!countedAsFlippedSet.has(card.dataset.identifier)) {
+                        countedAsFlippedSet.add(card.dataset.identifier);
+                        flippedCardsCount++;
+                        updateStatusLine(); // Update the combined status line
+                    }
+                    speakCardContent(cardData.front, cardData.back);
+                }
+            });
+            return cardContainer;
+        }
+
+        // updateFlippedStatus is no longer needed as a separate display function
+        // Its logic is merged into updateStatusLine
+
+        function displayCards(cards) {
+            if (!cardGrid) return;
+            // updateLoadingProgressText("正在界面上展示卡片..."); // Now handled by timed sequence
+            const fragment = document.createDocumentFragment();
+            cards.forEach((cardData, index) => { 
+                if (cardData.front && cardData.back) {
+                    const cardElement = createCardElement(cardData);
+                    fragment.appendChild(cardElement);
+                    setTimeout(() => {
+                        cardElement.classList.add('animate-in');
+                    }, index * 100); 
+                    if (!cardData.isSpecialNoMoreContent) {
+                       if (!existingCardFronts.includes(cardData.front.toLowerCase())) {
+                           existingCardFronts.push(cardData.front.toLowerCase());
+                           cardsGeneratedCount++;
+                       }
+                    }
+                }
+            });
+            cardGrid.appendChild(fragment);
+            updateStatusLine(); 
+        }
+
+        function getRandomTopics(count = 2) {
+            const shuffled = [...exampleTopics].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function updateStatusLine() {
+            const authInfo = getWenXiaoBaiAuthInfo();
+            if (!currentTopic && authInfo) { // No topic yet, but logged in
+                const [topicA, topicB] = getRandomTopics();
+                statusLine.innerHTML = `输入一个您感兴趣的主题，例如“${topicA}”或“${topicB}”，AI将为您生成相关的知识卡片，助您轻松学习与探索。`;
+                return;
+            }
+            if (!authInfo) { // Not logged in
+                statusLine.innerHTML = "请先<button onclick='openWenXiaoBaiAuthModal()' class='text-blue-500 hover:underline focus:outline-none dark:text-blue-400 dark:hover:text-blue-300'>登录</button>后生成卡片"; 
+                return; 
+            }
+            // If there's a currentTopic and user is logged in
+            statusLine.innerHTML = `已生成 ${cardsGeneratedCount} 张卡片，已翻阅 ${flippedCardsCount} 张`;
+        }
+
+
+        function getWenXiaoBaiAuthInfo() {
+            wxbAppState = loadWenXiaoBaiState();
+            if (wxbAppState && wxbAppState.token && wxbAppState.user_id) {
+                return { authToken: wxbAppState.token, userId: wxbAppState.user_id, phone: wxbAppState.phone };
+            }
+            return null;
+        }
+        
+        function displayLoggedInState() {
+            if (loginFormView) loginFormView.classList.add('hidden');
+            if (loggedInView) loggedInView.classList.remove('hidden');
+            if (loggedInUserPhoneElement && wxbAppState.phone) {
+                loggedInUserPhoneElement.textContent = wxbAppState.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+            } else if (loggedInUserPhoneElement) {
+                loggedInUserPhoneElement.textContent = "未知号码";
+            }
+        }
+        function displayLoggedOutState() {
+            if (loginFormView) loginFormView.classList.remove('hidden');
+            if (loggedInView) loggedInView.classList.add('hidden');
+            if (phoneInput) phoneInput.value = '';
+            if (codeInput) codeInput.value = '';
+            if (loginStatus) loginStatus.textContent = '';
+        }
+        function openWenXiaoBaiAuthModal() {
+            const authInfo = getWenXiaoBaiAuthInfo();
+            if (authInfo) displayLoggedInState(); else displayLoggedOutState();
+            if (wenXiaoBaiAuthModal) {
+                wenXiaoBaiAuthModal.style.display = "block";
+                wenXiaoBaiAuthModal.classList.remove('closing');
+                const modalContent = wenXiaoBaiAuthModal.querySelector('.modal-content');
+                if(modalContent) { modalContent.style.opacity = 1; modalContent.style.transform = 'scale(1)';}
+            }
+        }
+        function closeWenXiaoBaiAuthModal() {
+            if (wenXiaoBaiAuthModal) {
+                wenXiaoBaiAuthModal.classList.add('closing');
+                const modalContent = wenXiaoBaiAuthModal.querySelector('.modal-content');
+                if (modalContent) { modalContent.style.opacity = 0; modalContent.style.transform = 'scale(0.8)';}
+                setTimeout(() => {
+                    if (wenXiaoBaiAuthModal) { wenXiaoBaiAuthModal.style.display = "none"; wenXiaoBaiAuthModal.classList.remove('closing');}
+                }, 300);
+            }
+        }
+        async function sendWenXiaoBaiCode() {
+            if (!phoneInput) return;
+            const phone = phoneInput.value.trim();
+            if (!phone) { showToast('请输入手机号码', 'warning'); return; }
+            if (loginStatus) { loginStatus.textContent = '发送验证码中...'; loginStatus.style.color = 'blue'; }
+            if (!wxbAppState.device_id) wxbAppState.device_id = generateDeviceId();
+            await getWebId();
+            const url = `${WXB_BASE_URL}/api/v1.0/user/codes`;
+            const data = { phone: phone };
+            const dataStr = JSON.stringify(data);
+            try {
+                const headers = await getWenXiaoBaiHeaders(dataStr);
+                const response = await fetch(url, { method: 'POST', headers: headers, body: dataStr });
+                const result = await response.json();
+                if (result.code === 0) {
+                    if (loginStatus) { loginStatus.textContent = '验证码已发送。'; loginStatus.style.color = 'green'; }
+                    showToast('验证码已发送，请查收！', 'success');
+                    wxbAppState.phone_to_verify = phone;
+                    saveWenXiaoBaiState(wxbAppState);
+                } else {
+                    if (loginStatus) { loginStatus.textContent = `发送失败: ${result.msg || '未知错误'}`; loginStatus.style.color = 'red'; }
+                    showToast(`验证码发送失败: ${result.msg || '未知错误'}`, 'error');
+                }
+            } catch (error) {
+                if (loginStatus) { loginStatus.textContent = `发送验证码异常: ${error.message}`; loginStatus.style.color = 'red'; }
+                showToast(`发送验证码异常: ${error.message}`, 'error');
+            }
+        }
+        async function doWenXiaoBaiLogin() {
+            if (!phoneInput || !codeInput || !loginStatus) return;
+            const phone = wxbAppState.phone_to_verify || phoneInput.value.trim();
+            const code = codeInput.value.trim();
+            if (!phone || !code) { showToast('请输入手机号码和验证码', 'warning'); return; }
+            loginStatus.textContent = '登录中...'; loginStatus.style.color = 'blue';
+            if (!wxbAppState.device_id) wxbAppState.device_id = generateDeviceId();
+            if (!wxbAppState.web_id) await getWebId();
+            const url = `${WXB_BASE_URL}/api/v1.0/user/sessions`;
+            const data = { phone: phone, code: code, deviceId: wxbAppState.device_id, device: "Chrome", client: "web", extraInfo: { url: "https://www.wenxiaobai.com/chat/tourist" } };
+            const dataStr = JSON.stringify(data);
+            try {
+                const headers = await getWenXiaoBaiHeaders(dataStr);
+                const response = await fetch(url, { method: 'POST', headers: headers, body: dataStr });
+                const result = await response.json();
+                if (response.ok && result.code === 0) {
+                    const userData = result.data.user || {};
+                    const token = result.data.token;
+                    if (userData.id && token) {
+                        wxbAppState.token = token;
+                        wxbAppState.user_id = String(userData.id);
+                        wxbAppState.phone = phone;
+                        delete wxbAppState.phone_to_verify;
+                        saveWenXiaoBaiState(wxbAppState);
+                        loginStatus.textContent = '登录成功！'; loginStatus.style.color = 'green';
+                        showToast('登录成功！', 'success');
+                        await startWenXiaoBaiConversation();
+                        closeWenXiaoBaiAuthModal();
+                        updateStatusLine(); 
+                        if (currentTopic && topicInput && topicInput.value.trim() === currentTopic) {
+                            showToast("登录成功，正在生成卡片...", "info", 2000);
+                            fetchAndDisplayCards(true);
+                        }
+                    } else {
+                        loginStatus.textContent = '登录失败: 用户信息或token缺失'; loginStatus.style.color = 'red';
+                        showToast('登录失败: 用户信息或token缺失', 'error');
+                    }
+                } else {
+                    const errorMsg = result.msg || response.statusText;
+                    loginStatus.textContent = `登录失败: ${errorMsg}`; loginStatus.style.color = 'red';
+                    showToast(`登录失败: ${errorMsg}`, 'error');
+                }
+            } catch (error) {
+                loginStatus.textContent = `登录异常: ${error.message}`; loginStatus.style.color = 'red';
+                showToast(`登录异常: ${error.message}`, 'error');
+            }
+        }
+        function doWenXiaoBaiLogout() {
+            const loggedInPhone = wxbAppState.phone ? wxbAppState.phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2') : "用户";
+            clearWenXiaoBaiState();
+            showToast(`${loggedInPhone} 已退出登录。`, 'info');
+            displayLoggedOutState();
+            currentTopic = ""; 
+            if (topicInput) topicInput.value = "";
+            updateStatusLine(); 
+            if (cardGrid) cardGrid.innerHTML = '';
+            cardsGeneratedCount = 0;
+            flippedCardsCount = 0;
+            countedAsFlippedSet.clear(); 
+            updateStatusLine(); // Update status line to reflect counts
+            existingCardFronts = [];
+            noMoreContentFromAPI = false;
+            if (continueGenerateButtonContainer) continueGenerateButtonContainer.classList.add('hidden');
+        }
+        async function startWenXiaoBaiConversation() { 
+            if (!wxbAppState.user_id || !wxbAppState.device_id || !wxbAppState.token) return false;
+            const url = `${WXB_BASE_URL}/api/v1.0/core/conversations/users/${wxbAppState.user_id}/bots/${WXB_BOT_ID_CHAT}/conversation`;
+            const payload = { visitorId: wxbAppState.device_id };
+            const payloadStr = JSON.stringify(payload);
+            try {
+                const headers = await getWenXiaoBaiHeaders(payloadStr);
+                const response = await fetch(url, { method: 'POST', headers: headers, body: payloadStr });
+                const result = await response.json();
+                if (result.code === 0 && result.data) {
+                    wxbAppState.conversation_id = result.data;
+                    wxbAppState.turn_index = 0;
+                    wxbAppState.last_chat_time = Date.now();
+                    saveWenXiaoBaiState(wxbAppState);
+                    return true;
+                } else { return false; }
+            } catch (error) { return false; }
+        }
+        async function checkAndRefreshWenXiaoBaiConversation() {
+            const currentTime = Date.now();
+            const needsRefresh = !wxbAppState.conversation_id || (wxbAppState.last_chat_time && (currentTime - wxbAppState.last_chat_time > WXB_CONVERSATION_COOLDOWN));
+            if (needsRefresh) return await startWenXiaoBaiConversation();
+            wxbAppState.last_chat_time = currentTime;
+            saveWenXiaoBaiState(wxbAppState);
+            return true;
+        }
+        
+        function updateLoadingProgressText(message) {
+            if (loadingStatusText) {
+                loadingStatusText.textContent = message;
+            }
+        }
+        
+        function playLoadingMessagesSequence() {
+            loadingMessageTimeoutIds.forEach(clearTimeout); 
+            loadingMessageTimeoutIds = [];
+
+            const messages = [
+                { text: "正在发送主题需求...", duration: () => Math.random() * 2000 + 2000 }, 
+                { text: "卡片正在生成...",   duration: () => Math.random() * 4000 + 4000 }, 
+                { text: "正在获取卡片信息...", duration: () => Math.random() * 2000 + 2000 }, 
+                { text: "正在渲染卡片...",   duration: null } 
+            ];
+
+            let currentIndex = 0;
+
+            function scheduleNextMessage() {
+                if (!isLoading || currentIndex >= messages.length) {
+                    if (!isLoading && loadingStatusText) {
+                         updateLoadingProgressText("卡片生成中"); 
+                    }
+                    return;
+                }
+                
+                updateLoadingProgressText(messages[currentIndex].text);
+                
+                const currentDuration = messages[currentIndex].duration ? messages[currentIndex].duration() : null;
+                currentIndex++;
+
+                if (currentDuration !== null && currentIndex < messages.length) {
+                    const timeoutId = setTimeout(scheduleNextMessage, currentDuration);
+                    loadingMessageTimeoutIds.push(timeoutId);
+                } else if (currentIndex >= messages.length && messages[messages.length -1].duration === null) {
+                    // Last message is set
+                }
+            }
+            scheduleNextMessage(); 
+        }
+
+
+        async function callWenXiaoBaiAPI_forFlashcards(topic, authToken, count = 20, existingTitles = []) {
+            // Initial message is set by playLoadingMessagesSequence
+            const conversationOk = await checkAndRefreshWenXiaoBaiConversation();
+            if (!conversationOk) { 
+                showToast("会话初始化失败，请尝试重新登录。", 'error'); 
+                openWenXiaoBaiAuthModal(); 
+                return null; 
+            }
+            let flashcardPrompt = `请为主题 "${topic}" 生成 ${count} 个独特的闪卡。每个闪卡需要包含一个正面（"front"，简洁的知识点、术语或概念，不超过10个字）和一个反面（"back"，对正面的简洁解释或定义，非常精炼，不超过60字）。请确保内容具有高度信息量。为了避免重复，请不要生成以下已经存在的正面内容：${existingTitles.join("，") || "无"}。请严格以JSON数组的格式返回结果，不要包含任何其他说明性文字，例如：[{"front": "示例知识点1", "back": "示例解释1"}, {"front": "示例知识点2", "back": "示例解释2"}] 如果无法为该主题生成新的、独特的、有意义的内容，请返回一个空数组 []。`;
+            const url = `${WXB_BASE_URL}/api/v1.0/core/conversation/chat/v1`;
+            const payload = { "userId": parseInt(wxbAppState.user_id), "botId": WXB_BOT_ID_CHAT, "botAlias": "custom", "isRetry": false, "breakingStrategy": 0, "isNewConversation": wxbAppState.turn_index === 0, "mediaInfos": [], "turnIndex": wxbAppState.turn_index, "rewriteQuery": "", "conversationId": wxbAppState.conversation_id, "capabilities": [{ "icon": "https://wy-static.wenxiaobai.com/bot-capability/prod/%E6%B7%B1%E5%BA%A6%E6%80%9D%E8%80%83.png", "title": "深度思考(R1)", "defaultQuery": "", "capability": "otherBot", "capabilityRang": 0, "minAppVersion": "", "botId": WXB_BOT_ID_DEEP_THINK, "botDesc": "深度回答这个问题（DeepSeek R1）", "selectedIcon": "https://wy-static.wenxiaobai.com/bot-capability/prod/%E6%B7%B1%E5%BA%A6%E6%80%9D%E8%80%83%E9%80%89%E4%B8%AD.png", "botIcon": "https://platform-dev-1319140468.cos.ap-nanjing.myqcloud.com/bot/avatar/2025/02/06/612cbff8-51e6-4c6a-8530-cb551bcfda56.webp", "exclusiveCapabilities": null, "defaultSelected": true, "defaultHidden": false, "key": "deep_think", "defaultPlaceholder": "", "isPromptMenu": false, "promptMenu": false, "_id": "deep_think" }], "attachmentInfo": { "url": { "infoList": [] } }, "inputWay": "proactive", "query": flashcardPrompt, "pureQuery": flashcardPrompt };
+            const payloadStr = JSON.stringify(payload);
+            let accumulatedJsonString = ''; 
+            let cleanedJson; 
+
+            try {
+                const headers = await getWenXiaoBaiHeaders(payloadStr, true);
+                const response = await fetch(url, { method: 'POST', headers: headers, body: payloadStr });
+                if (!response.ok) { 
+                    const errorText = await response.text(); 
+                    showToast(`请求失败: ${response.status}. ${errorText.substring(0, 150)}`, 'error', 5000); 
+                    return null; 
+                }
+                const reader = response.body.getReader(); 
+                const decoder = new TextDecoder('utf-8'); 
+                let insideThinkingBlock = false;
+
+                while (true) {
+                    const { done, value } = await reader.read(); 
+                    if (done) break;
+                    const chunk = decoder.decode(value, { stream: true }); 
+                    const lines = chunk.split('\n');
+                    for (const line of lines) {
+                        if (line.startsWith('data:')) {
+                            const dataContentStr = line.substring(5).trim();
+                            if (dataContentStr) {
+                                try {
+                                    const jsonData = JSON.parse(dataContentStr); 
+                                    let content = jsonData.content;
+                                    if (content !== undefined && content !== null) {
+                                        let textPortion = String(content);
+                                        if (insideThinkingBlock) { 
+                                            const endIndex = textPortion.indexOf('<end>'); 
+                                            if (endIndex !== -1) { 
+                                                insideThinkingBlock = false; 
+                                                textPortion = textPortion.substring(endIndex + 5).trim(); 
+                                            } else continue; 
+                                        }
+                                        const thinkIndex = textPortion.indexOf('```ys_think');
+                                        if (thinkIndex !== -1 && !insideThinkingBlock) { 
+                                            const beforeThink = textPortion.substring(0, thinkIndex).trim(); 
+                                            if (beforeThink.length > 0) accumulatedJsonString += beforeThink.replace(/\[\d+\](?:\(@ref\))?/g, '').trim(); 
+                                            insideThinkingBlock = true; continue; 
+                                        }
+                                        if (!insideThinkingBlock && textPortion.trim().length > 0) {
+                                            accumulatedJsonString += textPortion.replace(/\[\d+\](?:\(@ref\))?/g, '').trim();
+                                        }
+                                    }
+                                } catch (e) { 
+                                    if (!insideThinkingBlock && dataContentStr.trim().length > 0) {
+                                        accumulatedJsonString += dataContentStr.trim(); 
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } 
+                if (!accumulatedJsonString.trim()) { 
+                    showToast("AI未返回任何内容。", "warning"); 
+                    return []; 
+                }
+                
+                cleanedJson = accumulatedJsonString; 
+                let flashcards;
+
+                try { 
+                    let potentialJson = cleanedJson;
+                    potentialJson = potentialJson.replace(/已深度思考（用时.*?秒）/g, '').trim();
+                    potentialJson = potentialJson.replace(/：/g, ':'); 
+                    potentialJson = potentialJson.replace(/\[object Object\]$/,'').trim();
+                    const markdownMatch = potentialJson.match(/```(?:json)?\s*(\[[\s\S]*?\])\s*```/);
+                    if (markdownMatch && markdownMatch[1]) {
+                        potentialJson = markdownMatch[1].trim(); 
+                    } else {
+                        const firstBracket = potentialJson.indexOf('[');
+                        const lastBracket = potentialJson.lastIndexOf(']');
+                        if (firstBracket !== -1 && lastBracket > firstBracket) {
+                            potentialJson = potentialJson.substring(firstBracket, lastBracket + 1);
+                        } 
+                    }
+                    cleanedJson = potentialJson; 
+                    if (!cleanedJson.startsWith('[') || !cleanedJson.endsWith(']')) {
+                       console.warn("[WXB Call API] String for parsing does not start/end with brackets:", cleanedJson, "Original accumulated:", accumulatedJsonString);
+                    }
+                    console.log("[WXB Call API] Attempting to parse cleaned JSON:", cleanedJson);
+                    flashcards = JSON.parse(cleanedJson); 
+                    if (Array.isArray(flashcards)) { 
+                        wxbAppState.turn_index++; 
+                        saveWenXiaoBaiState(wxbAppState); 
+                        return flashcards.filter(c => c.front && c.back); 
+                    } else { 
+                        throw new Error("Parsed data is not an array."); 
+                    }
+                } catch (e) { 
+                    console.error("[WXB Call API] Final JSON parsing failed:", e, "\nOriginal Accumulated:", accumulatedJsonString, "\nAttempted Cleaned for Parse:", cleanedJson); 
+                    showToast("返回数据格式错误，无法解析卡片。", 'error', 5000); 
+                    return []; 
+                }
+            } catch (error) { 
+                console.error("[WXB Call API] Error during WenXiaoBai API call (fetch/stream phase):", error); 
+                showToast(`调用服务出错: ${error.message.substring(0,100)}`, 'error', 5000); 
+                return null; 
+            }
+        }
+        
+        async function fetchAndDisplayCards(isInitialLoad = true) {
+            if (isLoading) return;
+            isLoading = true;
+            playLoadingMessagesSequence(); 
+            
+            if(generateButton) {
+                generateButton.disabled = true;
+                generateButton.classList.remove('bg-blue-500', 'hover:bg-blue-600', 'focus:ring-blue-500');
+                generateButton.classList.add('bg-gray-400', 'cursor-not-allowed', 'hover:bg-gray-400', 'focus:ring-gray-400');
+            }
+            if(topicInput) topicInput.disabled = true;
+            if(continueGenerateButtonContainer) continueGenerateButtonContainer.classList.add('hidden'); 
+
+            try {
+                usedRealAI = false;
+                const cardsToFetch = 20; 
+                if (isInitialLoad) {
+                    if(cardGrid) cardGrid.innerHTML = '';
+                    cardsGeneratedCount = 0;
+                    flippedCardsCount = 0;
+                    countedAsFlippedSet.clear(); 
+                    updateStatusLine(); // Update status line to show initial message or counts
+                    existingCardFronts = [];
+                    noMoreContentFromAPI = false; 
+                }
+                if(loadingIndicator) loadingIndicator.classList.remove('hidden'); 
+                const authInfo = getWenXiaoBaiAuthInfo();
+                let newCards = null;
+                if (authInfo && authInfo.authToken) {
+                    usedRealAI = true;
+                    newCards = await callWenXiaoBaiAPI_forFlashcards(currentTopic, authInfo.authToken, cardsToFetch, existingCardFronts);
+                    
+                    if (newCards === null) { 
+                        noMoreContentFromAPI = false; 
+                    } else if (newCards.length === 0) {
+                        if (cardsGeneratedCount === 0 && isInitialLoad) { 
+                            showToast(`未能为主题 "${currentTopic}" 生成任何卡片。请尝试其他主题。`, 'warning', 4000);
+                            noMoreContentFromAPI = true; 
+                        } else { 
+                            showToast("本次未获取到更多新卡片，您可以稍后重试或更换主题。", 'info', 3000);
+                        }
+                    }
+                } else { 
+                    showToast("请先登录！", "error"); 
+                    openWenXiaoBaiAuthModal();
+                    noMoreContentFromAPI = true; 
+                }
+
+                if (newCards && newCards.length > 0) {
+                    displayCards(newCards); 
+                }
+                
+                if (cardsGeneratedCount > 0) { 
+                    if(continueGenerateButtonContainer) continueGenerateButtonContainer.classList.remove('hidden');
+                } else {
+                    if(continueGenerateButtonContainer) continueGenerateButtonContainer.classList.add('hidden');
+                }
+
+            } catch (error) {
+                console.error("[DEBUG] Uncaught error in fetchAndDisplayCards:", error);
+                showToast("生成卡片时发生意外错误。", "error");
+                if(continueGenerateButtonContainer) continueGenerateButtonContainer.classList.add('hidden');
+            } finally {
+                loadingMessageTimeoutIds.forEach(clearTimeout); 
+                loadingMessageTimeoutIds = [];
+
+                if(loadingIndicator) {
+                    loadingIndicator.classList.add('hidden');
+                    updateLoadingProgressText("卡片生成中"); 
+                }
+                isLoading = false;
+                if(generateButton) {
+                    generateButton.disabled = false;
+                    generateButton.classList.remove('bg-gray-400', 'hover:bg-gray-400', 'focus:ring-gray-400', 'cursor-not-allowed');
+                    generateButton.classList.add('bg-blue-500', 'hover:bg-blue-600', 'focus:ring-blue-500');
+                }
+                if(topicInput) topicInput.disabled = false;
+                updateStatusLine();
+                
+                if (cardsGeneratedCount > 0) { 
+                    if(continueGenerateButtonContainer) continueGenerateButtonContainer.classList.remove('hidden');
+                } else {
+                     if(continueGenerateButtonContainer) continueGenerateButtonContainer.classList.add('hidden');
+                }
+            }
+        }
+
+        // --- Event Listeners ---
+        function triggerCardGeneration() {
+            const authInfo = getWenXiaoBaiAuthInfo();
+            if (!authInfo) { showToast("请先登录！", 'error'); openWenXiaoBaiAuthModal(); return; } 
+            const topic = topicInput.value.trim();
+            if (!topic) { showToast("请输入一个主题！", 'warning'); if(topicInput) topicInput.focus(); return; }
+            if (isLoading) return; 
+
+            currentTopic = topic;
+            fetchAndDisplayCards(true); 
+        }
+
+        generateButton.addEventListener('click', triggerCardGeneration);
+
+        topicInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); 
+                triggerCardGeneration();
+            }
+        });
+
+
+        if(continueGenerateButton) {
+            continueGenerateButton.addEventListener('click', () => {
+                if (isLoading) return; 
+                fetchAndDisplayCards(false); 
+            });
+        }
+
+        if(sendCodeBtn) sendCodeBtn.addEventListener('click', sendWenXiaoBaiCode);
+        if(loginBtn) loginBtn.addEventListener('click', doWenXiaoBaiLogin);
+        if(logoutBtn) logoutBtn.addEventListener('click', doWenXiaoBaiLogout);
+        
+        if(authSettingsButton && authSettingsButton.classList.contains('fab-button')) {
+             authSettingsButton.addEventListener('click', openWenXiaoBaiAuthModal);
+        }
+        
+        // --- Favorites Panel Logic ---
+        function renderFavoritesPanel() {
+            favoritesTableContainer.innerHTML = ''; 
+            if (favoriteCards.length === 0) {
+                noFavoritesMessage.classList.remove('hidden');
+                return;
+            }
+            noFavoritesMessage.classList.add('hidden');
+
+            const table = document.createElement('table');
+            table.className = 'favorites-table w-full';
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            const headers = ['序号', '知识点', '解读', '操作'];
+            headers.forEach(text => {
+                const th = document.createElement('th');
+                th.textContent = text;
+                th.className = 'px-4 py-2 text-left';
+                headerRow.appendChild(th);
+            });
+
+            const tbody = table.createTBody();
+            favoriteCards.forEach((favCard, index) => {
+                const row = tbody.insertRow();
+                
+                const cellIndex = row.insertCell();
+                cellIndex.textContent = index + 1;
+                cellIndex.className = 'px-4 py-2';
+
+                const cellFront = row.insertCell();
+                cellFront.textContent = favCard.front;
+                cellFront.className = 'px-4 py-2';
+
+                const cellBack = row.insertCell();
+                cellBack.textContent = favCard.back;
+                cellBack.className = 'px-4 py-2';
+
+                const cellAction = row.insertCell();
+                cellAction.className = 'px-4 py-2 text-center';
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'action-btn text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300';
+                removeBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                removeBtn.title = '移除收藏';
+                removeBtn.onclick = () => {
+                    favoriteCards.splice(index, 1);
+                    localStorage.setItem('favoriteFlashcards', JSON.stringify(favoriteCards));
+                    renderFavoritesPanel(); 
+                    showToast('已从收藏中移除', 'info', 1500);
+
+                    const cardElements = cardGrid.querySelectorAll('.card-container .card');
+                    cardElements.forEach(cardEl => {
+                        const frontTextEl = cardEl.querySelector('.card-front h3');
+                        const backTextEl = cardEl.querySelector('.card-back p');
+                        if (frontTextEl && backTextEl && frontTextEl.textContent === favCard.front && backTextEl.textContent === favCard.back) {
+                            const starEl = cardEl.parentElement.querySelector('.favorite-star');
+                            if (starEl) {
+                                starEl.classList.remove('is-favorite');
+                            }
+                        }
+                    });
+                };
+                cellAction.appendChild(removeBtn);
+            });
+            favoritesTableContainer.appendChild(table);
+        }
+
+        function openFavoritesPanelModal() {
+            renderFavoritesPanel();
+            if (favoritesPanelModal) {
+                favoritesPanelModal.style.display = "block";
+                favoritesPanelModal.classList.remove('closing');
+                const modalContent = favoritesPanelModal.querySelector('.modal-content');
+                if(modalContent) {
+                    modalContent.style.opacity = 1;
+                    modalContent.style.transform = 'scale(1)';
+                }
+            }
+        }
+
+        function closeFavoritesPanelModal() {
+            if (favoritesPanelModal) {
+                favoritesPanelModal.classList.add('closing');
+                const modalContent = favoritesPanelModal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.opacity = 0;
+                    modalContent.style.transform = 'scale(0.8)';
+                }
+                setTimeout(() => {
+                    if (favoritesPanelModal) { 
+                        favoritesPanelModal.style.display = "none";
+                        favoritesPanelModal.classList.remove('closing'); 
+                    }
+                }, 300); 
+            }
+        }
+
+        if(favoritesToggleButton) {
+            favoritesToggleButton.addEventListener('click', openFavoritesPanelModal);
+        }
+
+        // --- Info Panel Logic ---
+        function openInfoPanelModal() {
+            if (infoPanelModal) {
+                infoPanelModal.style.display = "block";
+                infoPanelModal.classList.remove('closing');
+                const modalContent = infoPanelModal.querySelector('.modal-content');
+                if(modalContent) {
+                    modalContent.style.opacity = 1;
+                    modalContent.style.transform = 'scale(1)';
+                }
+            }
+        }
+
+        function closeInfoPanelModal() {
+             if (infoPanelModal) {
+                infoPanelModal.classList.add('closing');
+                const modalContent = infoPanelModal.querySelector('.modal-content');
+                if (modalContent) {
+                    modalContent.style.opacity = 0;
+                    modalContent.style.transform = 'scale(0.8)';
+                }
+                setTimeout(() => {
+                    if (infoPanelModal) { 
+                        infoPanelModal.style.display = "none";
+                        infoPanelModal.classList.remove('closing'); 
+                    }
+                }, 300); 
+            }
+        }
+        if(infoButton) {
+            infoButton.addEventListener('click', openInfoPanelModal);
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadVoices();
+            updateStatusLine(); 
+            // updateFlippedStatus(); // Called within updateStatusLine now
+            const authInfo = getWenXiaoBaiAuthInfo();
+            if (!authInfo) {
+                // Initial message handled by updateStatusLine
+            }
+            if (!wxbAppState.device_id) {
+                wxbAppState.device_id = generateDeviceId();
+            }
+            getWebId();
+            if(continueGenerateButtonContainer) continueGenerateButtonContainer.classList.add('hidden'); 
+        });
+    </script>
+</body>
+</html>
